@@ -85,7 +85,7 @@ async function handleClick(event) {
     ).toFixed(2);
     const handedness = results.handednesses[0][0].displayName;
 
-    p.innerText = GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore}%\n Handedness: ${handedness};
+    p.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore}%\n Handedness: ${handedness}`;
     p.style =
         "left: 0px;" +
         "top: " +
@@ -219,12 +219,28 @@ async function predictWebcam() {
       });
       const thumbTip = landmarks[4];
       const indexTip = landmarks[8];
+      const middleTip = landmarks[12];
+      const middleDip = landmarks[11];
+      const middlePip = landmarks[10];
+      const indexDip = landmarks[7];
+      const indexPip = landmarks[6];
+      const ringTip = landmarks[16];
       const thumbIndexDistance = Math.sqrt(Math.pow(thumbTip.x - indexTip.x, 2) + Math.pow(thumbTip.y - indexTip.y, 2));
 
+      function calculateDistance(landmark1, landmark2) {
+        return Math.sqrt(
+            Math.pow(landmark1.x - landmark2.x, 2) +
+            Math.pow(landmark1.y - landmark2.y, 2)
+        );
+      }
       if (thumbIndexDistance < 0.04) {
-        // pinching gesture
+        // Example Interaction
         results.gestures[0][0].categoryName = "pinch";
+      }
 
+      //two finger gesture to be used in scrolling
+      if ((calculateDistance(indexTip, middleTip) < 0.08) && (calculateDistance(indexDip, middleDip) < 0.08) && (calculateDistance(indexPip, middlePip) < 0.08) && (calculateDistance(middleTip, ringTip) >= 0.08)) {
+        results.gestures[0][0].categoryName = "two-finger";
       }
     }
   }
@@ -237,7 +253,7 @@ async function predictWebcam() {
         results.gestures[0][0].score * 100
     ).toFixed(2);
     const handedness = results.handednesses[0][0].displayName;
-    gestureOutput.innerText = GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness};
+    gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`;
   } else {
     gestureOutput.style.display = "none";
   }
