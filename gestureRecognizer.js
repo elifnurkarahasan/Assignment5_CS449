@@ -30,12 +30,12 @@ const videoWidth = "480px";
 // get everything needed to run.
 const createGestureRecognizer = async () => {
   const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
   );
   gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
     baseOptions: {
       modelAssetPath:
-        "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+          "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
       delegate: "GPU"
     },
     runningMode: runningMode
@@ -45,8 +45,8 @@ const createGestureRecognizer = async () => {
 createGestureRecognizer();
 
 /********************************************************************
-// Demo 1: Detect hand gestures in images
-********************************************************************/
+ // Demo 1: Detect hand gestures in images
+ ********************************************************************/
 
 const imageContainers = document.getElementsByClassName("detectOnClick");
 
@@ -81,45 +81,45 @@ async function handleClick(event) {
 
     const categoryName = results.gestures[0][0].categoryName;
     const categoryScore = parseFloat(
-      results.gestures[0][0].score * 100
+        results.gestures[0][0].score * 100
     ).toFixed(2);
     const handedness = results.handednesses[0][0].displayName;
 
-    p.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore}%\n Handedness: ${handedness}`;
+    p.innerText = GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore}%\n Handedness: ${handedness};
     p.style =
-      "left: 0px;" +
-      "top: " +
-      event.target.height +
-      "px; " +
-      "width: " +
-      (event.target.width - 10) +
-      "px;";
+        "left: 0px;" +
+        "top: " +
+        event.target.height +
+        "px; " +
+        "width: " +
+        (event.target.width - 10) +
+        "px;";
 
     const canvas = document.createElement("canvas");
     canvas.setAttribute("class", "canvas");
     canvas.setAttribute("width", event.target.naturalWidth + "px");
     canvas.setAttribute("height", event.target.naturalHeight + "px");
     canvas.style =
-      "left: 0px;" +
-      "top: 0px;" +
-      "width: " +
-      event.target.width +
-      "px;" +
-      "height: " +
-      event.target.height +
-      "px;";
+        "left: 0px;" +
+        "top: 0px;" +
+        "width: " +
+        event.target.width +
+        "px;" +
+        "height: " +
+        event.target.height +
+        "px;";
 
     event.target.parentNode.appendChild(canvas);
     const canvasCtx = canvas.getContext("2d");
     const drawingUtils = new DrawingUtils(canvasCtx);
     for (const landmarks of results.landmarks) {
       drawingUtils.drawConnectors(
-        landmarks,
-        GestureRecognizer.HAND_CONNECTIONS,
-        {
-          color: "#00FF00",
-          lineWidth: 5
-        }
+          landmarks,
+          GestureRecognizer.HAND_CONNECTIONS,
+          {
+            color: "#00FF00",
+            lineWidth: 5
+          }
       );
       drawingUtils.drawLandmarks(landmarks, {
         color: "#FF0000",
@@ -130,8 +130,8 @@ async function handleClick(event) {
 }
 
 /********************************************************************
-// Demo 2: Continuously grab image from webcam stream and detect it.
-********************************************************************/
+ // Demo 2: Continuously grab image from webcam stream and detect it.
+ ********************************************************************/
 
 const video = document.getElementById("webcam");
 const canvasElement = document.getElementById("output_canvas");
@@ -206,17 +206,26 @@ async function predictWebcam() {
   if (results.landmarks) {
     for (const landmarks of results.landmarks) {
       drawingUtils.drawConnectors(
-        landmarks,
-        GestureRecognizer.HAND_CONNECTIONS,
-        {
-          color: "#00FF00",
-          lineWidth: 5
-        }
+          landmarks,
+          GestureRecognizer.HAND_CONNECTIONS,
+          {
+            color: "#00FF00",
+            lineWidth: 5
+          }
       );
       drawingUtils.drawLandmarks(landmarks, {
         color: "#FF0000",
         lineWidth: 2
       });
+      const thumbTip = landmarks[4];
+      const indexTip = landmarks[8];
+      const thumbIndexDistance = Math.sqrt(Math.pow(thumbTip.x - indexTip.x, 2) + Math.pow(thumbTip.y - indexTip.y, 2));
+
+      if (thumbIndexDistance < 0.04) {
+        // pinching gesture
+        results.gestures[0][0].categoryName = "pinch";
+
+      }
     }
   }
   canvasCtx.restore();
@@ -225,10 +234,10 @@ async function predictWebcam() {
     gestureOutput.style.width = videoWidth;
     const categoryName = results.gestures[0][0].categoryName;
     const categoryScore = parseFloat(
-      results.gestures[0][0].score * 100
+        results.gestures[0][0].score * 100
     ).toFixed(2);
     const handedness = results.handednesses[0][0].displayName;
-    gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}`;
+    gestureOutput.innerText = GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness};
   } else {
     gestureOutput.style.display = "none";
   }
