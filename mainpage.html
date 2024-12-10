@@ -33,14 +33,29 @@ limitations under the License. -->
     <p>Use your hand to make gestures in front of the camera to get gesture classification. </br>Click <b>enable webcam</b> below and grant access to the webcam if prompted.</p>
 
     <div id="liveView" class="videoView">
+
+
         <button id="webcamButton" class="mdc-button mdc-button--raised">
             <span class="mdc-button__ripple"></span>
             <span class="mdc-button__label">ENABLE WEBCAM</span>
         </button>
+
+        <button id="customButton" class="mdc-button mdc-button--raised">
+            <span class="mdc-button__ripple"></span>
+            <span class="mdc-button__label">Test Button</span>
+        </button>
+
+        <div id="virtualCursor" style="position: absolute; width: 15px; height: 15px; background-color: red; border-radius: 50%; pointer-events: none; z-index: 1000;">
+
+        </div>
+
         <div style="position: relative;">
             <video id="webcam" autoplay playsinline></video>
             <canvas class="output_canvas" id="output_canvas" width="1280" height="720" style="position: absolute; left: 0px; top: 0px;"></canvas>
             <p id='gesture_output' class="output">
         </div>
     </div>
+
+
+
 </section>

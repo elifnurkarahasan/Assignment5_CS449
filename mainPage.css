@@ -43,6 +43,16 @@ section {
   transition: opacity 500ms ease-in-out;
 }
 
+#virtualCursor {
+  position: absolute;
+  width: 15px;
+  height: 15px;
+  background-color: red;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1000;
+}
+
 .removed {
   display: none;
 }
@@ -108,5 +118,5 @@ section {
 .output {
   display: none;
   width: 100%;
-  font-size: calc(8px + 1.2vw);
+  font-size: calc(8px + 1.2vw);
 }
