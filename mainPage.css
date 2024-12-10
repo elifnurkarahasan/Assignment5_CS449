@@ -21,6 +21,9 @@ body {
   --mdc-theme-on-primary: #f1f3f4;
 }
 
+
+
+
 h1 {
   color: #007f8b;
 }
@@ -44,13 +47,13 @@ section {
 }
 
 #virtualCursor {
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  background-color: red;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1000;
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background-color: red;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1000;
 }
 
 .removed {
@@ -118,5 +121,5 @@ section {
 .output {
   display: none;
   width: 100%;
-  font-size: calc(8px + 1.2vw);
+  font-size: calc(8px + 1.2vw);
 }
