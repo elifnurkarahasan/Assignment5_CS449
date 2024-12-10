@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Colors with Fun Interactions</title>
+
+    <link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+
+            --base-hue: 0;
+            --base-saturation: 100%;
+            --base-lightness: 50%;
+            background-color: hsl(var(--base-hue), var(--base-saturation), var(--base-lightness));
+            transition: background-color 0.3s;
+        }
+
+        h1 {
+            margin: 20px 0 10px 0;
+            font-size: 2.5em;
+            color: #333;
+        }
+
+        p {
+            margin: 10px 0 20px 0;
+            font-size: 1em;
+            color: #ffffff;
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: start;
+            gap: 20px;
+            margin-top: 50px;
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+            gap: 15px;
+        }
+
+        .color-button {
+            padding: 20px 40px;
+            font-size: 1.2em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            transition: box-shadow 0.3s, transform 0.3s;
+        }
+
+        .color-button:hover {
+            box-shadow: 0 0 10px rgba(255,255,255,0.7);
+            transform: scale(1.05);
+        }
+
+        .videoView {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        canvas.output_canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+
+        /* Scrollbar placeholder elements */
+        .scrollbar, .horizontal-scrollbar {
+            background: linear-gradient(to bottom, #ccc, #999);
+            border: 2px solid #888;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            transition: box-shadow 0.3s, transform 0.3s, border-color 0.3s;
+        }
+
+        .scrollbar:hover, .horizontal-scrollbar:hover {
+            box-shadow: 0 0 10px rgba(255,255,255,0.7);
+            transform: scale(1.05);
+        }
+
+        .scrollbar.active, .horizontal-scrollbar.active {
+            border-color: #ff0;
+        }
+
+        .scrollbar {
+            width: 30px;
+            height: 400px;
+        }
+
+        .horizontal-scrollbar {
+            width: 400px;
+            height: 30px;
+            background: linear-gradient(to right, #ccc, #999);
+            margin: 20px auto;
+        }
+
+        .indicator {
+            width: 100%;
+            height: 10px;
+            background: #444;
+            position: absolute;
+            left: 0;
+        }
+
+        .horizontal-indicator {
+            height: 100%;
+            width: 10px;
+            background: #444;
+            position: absolute;
+            top: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Learning Colors with Fun Computer Interactions</h1>
+    <p>
+        This page is designed to teach each color's name in English to children.
+        With the human-computer interaction-based page,
+        children can use hand gestures to click on the color buttons and see (and now hear) what color they are.
+        Hand-gesture controlled interactions make the learning process fun and memorable!
+        Move the cursor by raising your index finger and thumb, pinch (thumb and index close) to click,
+        and scroll by raising both index and middle fingers close together.
+
+        Click on the vertical scrollbar on the right of the webcam to enter vertical intensity mode (up/down brightness control),
+        or click on the horizontal scrollbar below the webcam to enter horizontal intensity mode (left/right brightness control).
+        If you choose another color while in an intensity-adjusting mode, the mode will reset and you must click a scrollbar again to re-enter.
+    </p>
+
+    <!-- Color Buttons -->
+    <div class="buttons-container">
+        <button class="color-button" id="redButton" style="background-color: red;">Red</button>
+        <button class="color-button" id="orangeButton" style="background-color: darkorange;">Orange</button>
+        <button class="color-button" id="greenButton" style="background-color: green;">Green</button>
+        <button class="color-button" id="blueButton" style="background-color: blue;">Blue</button>
+        <button class="color-button" id="yellowButton" style="background-color: yellow; color: black;">Yellow</button>
+        <button class="color-button" id="pinkButton" style="background-color: pink; color: black;">Pink</button>
+        <button class="color-button" id="purpleButton" style="background-color: purple;">Purple</button>
+        <button class="color-button" id="grayButton" style="background-color: dimgray;">Gray</button>
+    </div>
+
+    <div class="container">
+
+        <div class="videoView">
+            <img src="{{ url_for('video_feed') }}" alt="Video Feed" style="width: 100%;">
+            <canvas class="output_canvas" id="output_canvas" width="1280" height="720"></canvas>
+        </div>
+
+        <!-- Vertical Scrollbar Element -->
+        <div class="scrollbar" id="scrollbar" title="Click (pinch) here to toggle vertical intensity mode">
+            <div class="indicator" id="indicator"></div>
+        </div>
+    </div>
+
+    <!-- Horizontal Scrollbar Element -->
+    <div class="horizontal-scrollbar" id="horizontalScrollBar" title="Click (pinch) here to toggle horizontal intensity mode">
+        <div class="horizontal-indicator" id="horizontalIndicator"></div>
+    </div>
+
+    <script>
+
+        let baseHue = 0;
+        let baseSaturation = 100;
+        let baseLightness = 50;
+
+        let verticalIntensityMode = false;
+        let horizontalIntensityMode = false;
+
+        const scrollbar = document.getElementById("scrollbar");
+        const indicator = document.getElementById("indicator");
+
+        const horizontalScrollBar = document.getElementById("horizontalScrollBar");
+        const horizontalIndicator = document.getElementById("horizontalIndicator");
+
+        // Variables to prevent double speech within 3 seconds for the same color
+        let lastColorClicked = null;
+        let lastClickTime = 0; // in milliseconds
+
+        function updateVerticalIndicator() {
+            const usableHeight = 400 - 10;
+            const topPosition = (baseLightness / 100) * usableHeight;
+            indicator.style.top = topPosition + "px";
+        }
+
+        function updateHorizontalIndicator() {
+            const usableWidth = 400 - 10;
+            const leftPosition = (baseLightness / 100) * usableWidth;
+            horizontalIndicator.style.left = leftPosition + "px";
+        }
+
+        // Function to convert RGB to HSL
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if(max === min){
+                h = s = 0; // achromatic
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch(max){
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h *= 60;
+            }
+            return {h, s: s*100, l: l*100};
+        }
+
+        // Speak the color name
+        function speakColorName(colorName) {
+            // Map "darkorange" to "orange"
+            if (colorName.toLowerCase() === "darkorange") {
+                colorName = "orange";
+            }
+            const utterance = new SpeechSynthesisUtterance(colorName);
+            speechSynthesis.speak(utterance);
+        }
+
+        // Function to set background color
+        function setBackgroundColor(colorStr) {
+            // Create a temporary element to get computed color in RGB
+            let temp = document.createElement("div");
+            temp.style.color = colorStr;
+            document.body.appendChild(temp);
+            let computedColor = window.getComputedStyle(temp).color;
+            document.body.removeChild(temp);
+
+            let rgbMatch = computedColor.match(/\d+/g);
+            if (!rgbMatch) return;
+            let r = parseInt(rgbMatch[0]);
+            let g = parseInt(rgbMatch[1]);
+            let b = parseInt(rgbMatch[2]);
+
+            let hsl = rgbToHsl(r, g, b);
+            baseHue = hsl.h;
+            baseSaturation = hsl.s;
+            baseLightness = hsl.l;
+
+            updateBackgroundColor();
+        }
+
+        function updateBackgroundColor() {
+            document.body.style.setProperty('--base-hue', baseHue);
+            document.body.style.setProperty('--base-saturation', baseSaturation + '%');
+            document.body.style.setProperty('--base-lightness', baseLightness + '%');
+
+            // Update only the indicator for the active mode
+            if (verticalIntensityMode) {
+                updateVerticalIndicator();
+            }
+            if (horizontalIntensityMode) {
+                updateHorizontalIndicator();
+            }
+        }
+
+        function turnOffAllModes() {
+            if (verticalIntensityMode) {
+                toggleVerticalMode();
+            }
+            if (horizontalIntensityMode) {
+                toggleHorizontalMode();
+            }
+        }
+
+        function removeActiveHighlights() {
+            scrollbar.classList.remove('active');
+            horizontalScrollBar.classList.remove('active');
+        }
+
+        // Toggling vertical mode
+        function toggleVerticalMode() {
+            fetch('/toggle_vertical_mode', {method: 'POST'})
+            .then(res => res.json())
+            .then(data => {
+                verticalIntensityMode = data.vertical_intensity_mode;
+                if (verticalIntensityMode) {
+                    // If vertical is on, horizontal must be off
+                    if (horizontalIntensityMode) {
+                        // Turn off horizontal
+                        toggleHorizontalMode();
+                    }
+                    removeActiveHighlights();
+                    scrollbar.classList.add('active');
+                    // Update vertical indicator since we're now in vertical mode
+                    updateVerticalIndicator();
+                } else {
+                    scrollbar.classList.remove('active');
+                }
+            });
+        }
+
+        // Toggling horizontal mode
+        function toggleHorizontalMode() {
+            fetch('/toggle_horizontal_mode', {method: 'POST'})
+            .then(res => res.json())
+            .then(data => {
+                horizontalIntensityMode = data.horizontal_intensity_mode;
+                if (horizontalIntensityMode) {
+                    // If horizontal is on, vertical must be off
+                    if (verticalIntensityMode) {
+                        // Turn off vertical
+                        toggleVerticalMode();
+                    }
+                    removeActiveHighlights();
+                    horizontalScrollBar.classList.add('active');
+                    // Update horizontal indicator since we're now in horizontal mode
+                    updateHorizontalIndicator();
+                } else {
+                    horizontalScrollBar.classList.remove('active');
+                }
+            });
+        }
+
+        // When a color button is clicked
+        function onColorButtonClick(colorStr) {
+            setBackgroundColor(colorStr);
+
+            const now = Date.now();
+            if (colorStr !== lastColorClicked || (now - lastClickTime) > 3000) {
+                speakColorName(colorStr);
+                lastColorClicked = colorStr;
+                lastClickTime = now;
+            }
+
+            // If we are in any intensity mode, exit it
+            if (verticalIntensityMode || horizontalIntensityMode) {
+                turnOffAllModes();
+            }
+        }
+
+        // Add event listeners for color buttons
+        document.getElementById("redButton").addEventListener("click", () => onColorButtonClick("red"));
+        document.getElementById("orangeButton").addEventListener("click", () => onColorButtonClick("darkorange"));
+        document.getElementById("greenButton").addEventListener("click", () => onColorButtonClick("green"));
+        document.getElementById("blueButton").addEventListener("click", () => onColorButtonClick("blue"));
+        document.getElementById("yellowButton").addEventListener("click", () => onColorButtonClick("yellow"));
+        document.getElementById("pinkButton").addEventListener("click", () => onColorButtonClick("pink"));
+        document.getElementById("purpleButton").addEventListener("click", () => onColorButtonClick("purple"));
+        document.getElementById("grayButton").addEventListener("click", () => onColorButtonClick("gray"));
+
+        // When the vertical scrollbar is clicked
+        scrollbar.addEventListener("click", () => {
+            toggleVerticalMode();
+        });
+
+        // When the horizontal scrollbar is clicked
+        horizontalScrollBar.addEventListener("click", () => {
+            toggleHorizontalMode();
+        });
+
+        // Keyboard fallback for adjusting brightness
+        document.addEventListener("keydown", (e) => {
+            if (!verticalIntensityMode && !horizontalIntensityMode) return;
+            if (verticalIntensityMode) {
+                // Vertical mode responds to up/down
+                if (e.key === "ArrowUp") {
+                    baseLightness = Math.min(100, baseLightness + 10);
+                    updateBackgroundColor();
+                } else if (e.key === "ArrowDown") {
+                    baseLightness = Math.max(0, baseLightness - 10);
+                    updateBackgroundColor();
+                }
+            }
+            if (horizontalIntensityMode) {
+                // Horizontal mode responds to left/right
+                if (e.key === "ArrowRight") {
+                    baseLightness = Math.min(100, baseLightness + 10);
+                    updateBackgroundColor();
+                } else if (e.key === "ArrowLeft") {
+                    baseLightness = Math.max(0, baseLightness - 10);
+                    updateBackgroundColor();
+                }
+            }
+        });
+
+        // Initialize both indicators once (so they have a starting position)
+        updateVerticalIndicator();
+        updateHorizontalIndicator();
+    </script>
+</body>
+</html>
